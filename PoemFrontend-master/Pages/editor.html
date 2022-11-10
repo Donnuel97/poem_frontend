@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Freeform Poem App || New Poem Draft</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="keywords" content="opensource rich wysiwyg text editor jquery bootstrap execCommand html5" />
+    <meta name="description" content="This tiny jQuery Bootstrap WYSIWYG plugin turns any DIV into a HTML5 rich text editor" />
+    <link rel="apple-touch-icon" href="//mindmup.s3.amazonaws.com/lib/img/apple-touch-icon.png" />
+    <link rel="shortcut icon" href="http://mindmup.s3.amazonaws.com/lib/img/favicon.ico" >
+    <link href="PycharmProjects/PoemProject/external/google-code-prettify/prettify.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" rel="stylesheet">
+		<link href="http://netdna.bootstrapcdn.com/font-awesome/3.0.2/css/font-awesome.css" rel="stylesheet">
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
+    <script src="../external/google-code-prettify/prettify.js"></script>
+		<link href="../css/editor.css" rel="stylesheet">
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-md navbar-light bg-warning my-nav">
+        <div class="container-fluid px-3">
+          <a class="navbar-brand h4 mt-2 text-dark p-2" style="font-family:chalkduster; font-style: 900;" href="#">Free<span class="text-secondary">Form</span></a>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2  mt-3 mb-lg-0 mr-auto d-none" id="editor_actions">
+                <li class="nav-item"><a class="nav-link h6 bg-secondary rounded text-white mx-1 px-1" style="cursor:pointer;"
+                                        data-action="new" title="New" onclick="add_new()">New <span><i class="fa fa-plus"></i></span></a></li>
+                  <li class="nav-item"><a class="nav-link h6 bg-secondary rounded text-white px-1 mx-1"
+                                          style="cursor:pointer;" data-action="tokenize"
+                                          title="Tokenize" onclick="tokenize(this)">Tokenize <span><i class="fa fa-square"></i></span></a></li>
+                  <li class="nav-item"><a class="nav-link h6 bg-secondary rounded text-white mx-1 px-1"
+                                          style="cursor:pointer;" data-action="synonyms" title="Synonyms"
+                                          onclick="get_synonyms(this)">Get Synonyms <span><i class="fa fa-question-circle"></i></span></a></li>
+                  <li class="nav-item"><a class="nav-link h6 bg-secondary rounded text-white px-1 mx-1"
+                                          style="cursor:pointer;" data-action="rhymes" title="Rhymes"
+                                          onclick="get_rhymes(this)">Get Ryhmes <span><i class="fa fa-search"></i></span></a></li>
+                  <li class="nav-item d-none" id="edit_btn"><a
+                          class="nav-link h6 bg-secondary rounded text-white mx-1 px-1" style="cursor:pointer;"
+                          data-action="edit" title="Edit" onclick="edit_line()">Edit Line <span><i class="fa fa-edit"></i></span></a></li>
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle h6 bg-secondary rounded text-white mx-1 px-1" href="#"
+                       id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Set Language <span><i class="fa fa-map"></i></span>
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item language" title="French"  onclick="set_language(this)">French</a></li>
+                        <li><a class="dropdown-item language"  title="English"  onclick="set_language(this)">English</a></li>
+                    </ul>
+                    </li>
+            </ul>
+           
+        </div>
+    </div>
+    </nav>
+    <div class="d-flex align-items-stretch">
+        <div class="d-flex flex-column flex-shrink-0 bg-secondary" style="width: 4.5rem;">
+            <ul class="nav nav-pills nav-flush flex-column mb-auto text-center">
+                <li class="nav-item">
+                    <a href="javascript:switch_page('profile_nav', 'profile-page')" class="nav-link py-3 border-bottom border-warning bg-warning nav-btn" id="profile_nav" aria-current="page" title="Profile" data-bs-toggle="tooltip" data-bs-placement="right">
+                      <i class="fa-solid fa-user fa-2x text-secondary"></i>
+                    </a>
+                  </li>
+                  <li class="nav-item">
+                    <a href="javascript:switch_page('editor_nav', 'editor-page')" class="nav-link py-3 border-bottom border-warning nav-btn" id="editor_nav" aria-current="page" title="Editor" data-bs-toggle="tooltip" data-bs-placement="right">
+                      <i class="fa-solid fa-pencil fa-2x text-warning"></i>
+                    </a>
+                  </li>
+              <li class="nav-item">
+                <a href="javascript:switch_page('poems_nav', 'poem-list-page'); get_poems();" class="nav-link py-3 border-bottom border-warning nav-btn" aria-current="page" id="poems_nav" title="All Poems" data-bs-toggle="tooltip" data-bs-placement="right">
+                  <i class="fa-solid fa-list fa-2x text-warning"></i>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="javascript:logout()" class="nav-link py-3 border-bottom border-warning" aria-current="page" title="Sign Out" data-bs-toggle="tooltip" data-bs-placement="right">
+                  <i class="fa-solid fa-sign-out fa-2x text-warning"></i>
+                </a>
+              </li>
+            </ul>
+        </div>
+        <div id="editor-page" class="jumbotron tools mt-3 d-none page" style="width:90%">
+            <div id="title_display" class="jumbotron bg-warning text-dark text-center h5 mx-3 border border-secondary py-1 px-5">
+               <input type="text" placeholder="Enter Poem Title" onsubmit="save_title(this)" onblur="save_title(this)"
+                      id="edit_title" class="h5 py-1 bg-warning d-none"/>
+                <p id="display_title" class="d-inline">New Poem Draft</p>
+                <button id="edit_title_btn" class="btn btn-warning btn-lg mx-3 d-inline" type="button" onclick="edit_title(this)"><i class="fa fa-edit"></i></button>
+            </div>
+            <div id="display">
+            </div>
+            <textarea id="editor" onfocus="{unselect_other_paragraphs(-1)}" class="p-2 border-0" placeholder="Write Here"></textarea>
+        
+            <div class="modal" tabindex="-1" id="display_modal">
+                <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header p-2 bg-warning">
+                        <h6 class="modal-title"><span id="modal_action">Synonym</span> for <b id="modal_arg">Dog</b></h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="{$('#display_modal').hide()}" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="modal_body">
+                    </div>
+                </div>
+                </div>
+            </div>
+                <div class="modal" tabindex="-1" id="save_modal">
+                <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header p-2 bg-warning">
+                        <h6 class="modal-title">Create New Poem Draft</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="{$('#save_modal').hide()}" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" id="save_body">
+                        <input class="form form-control d-block" placeholder="Poem Title" required id="poem_title"/>
+                    </div>
+                        <div class="modal-footer">
+                <button class="btn btn-warning text-dark" onclick="$('#poem_title').val() === '' ? alert('The poem title cannot be empty'): save($('#poem_title').val())" data-bs-dismiss="modal">Save</button>
+                </div>
+                </div>
+                </div>
+            </div>
+        </div>
+        <div id="poem-list-page" class="jumbotron tools mt-3 overflow p-0 d-none page" style="width:90%">
+           <div class="row" id="poem-list-bucket">
+
+
+               
+           </div>
+        </div>
+        <div id="profile-page" class="jumbotron tools mt-3 overflow p-2 bg-light page" style="width:90%">
+            <div class="row bg-white m-3 p-3 jumbotron">
+                <div class="col-sm-12 col-md-2 col-lg-2 col-xl-2"></div>
+                <div class="col-sm-12 col-md-8 col-lg-8 col-xl-8">
+                    <form class="form form-group p-3 mt-lg-4" id="update_profile">
+                        <div class="row">
+                            <div class="col-12">
+                                <h4 class="text-center">Edit Basic Profile Details</h4>
+                                <hr class="mb-3"/>
+                            </div>
+                            <div class="col-sm-12 col-md-12 col-lg-6 mb-2">
+                                <p class="text-secondary m-0">First Name</p>
+                                <input class="form-control form-attr" type="text" name="first_name" placeholder="First Name"/>
+                                <small class="text-danger d-none"></small>
+                            </div>
+                            <div class="col-sm-12 col-md-12 col-lg-6 mb-2">
+                                <p class="text-secondary m-0">Last Name</p>
+                                <input class="form-control form-attr" type="text" name="last_name" placeholder="Last Name"/>
+                                 <small class="text-danger d-none"></small>
+                            </div>
+                            <div class="col-sm-12 col-md-12 col-lg-6 mb-2">
+                                <p class="text-secondary m-0">Username</p>
+                                <input class="form-control form-attr" type="text" name="username" placeholder="Username"/>
+                                 <small class="text-danger d-none"></small>
+                            </div>
+                            <div class="col-sm-12 col-md-12 col-lg-6">
+                                <p class="text-secondary m-0">Gender</p>
+                                <select class="form-control form-select mb-2 form-attr" name="gender">
+                                    <option>Male</option>
+                                    <option>Female</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-12 col-md-12 col-lg-12 mb-2">
+                                <p class="text-secondary m-0">Email Address</p>
+                                <input class="form-control form-attr" type="email" name="email" placeholder="Email Address"/>
+                                 <small class="text-danger d-none"></small>
+                            </div>
+                            <div class="col-12 mb-2">
+                                <p class="text-secondary m-0">Bio</p>
+                                <textarea class="form-control form-attr" name="bio" placeholder="Bio"></textarea>
+                                 <small class="text-danger d-none"></small>
+                            </div>
+                            <div class="col-12 mt-3">
+                                <input class="btn btn-warning btn-block" id="profile_save_btn" onclick="update_profile()" type="button" value="Save Details"/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-sm-12 col-md-2 col-lg-2 col-xl-2"></div>
+        </div>
+        <div class="row bg-white m-3 p-3 jumbotron">
+            <div class="col-sm-12 col-md-2 col-lg-2 col-xl-2"></div>
+                <div class="col-sm-12 col-md-8 col-lg-8 col-xl-8">
+                    <form class="form form-group p-3" id="change_password">
+                        <h4 class="text-center">Change Password</h4>
+                        <hr class="mb-3"/>
+                        <div class="mb-3">
+                        <p class="text-secondary m-0">Old Password</p>
+                        <input class="form-control form-attr" type="password" name="old_password" placeholder="Enter Old Password"/>
+                        <small class="text-danger"></small>
+                        </div>
+                        <div class="mb-3">
+                        <p class="text-secondary m-0">New Password</p>
+                        <input class="form-control form-attr" type="password" name="new_password" placeholder="Enter New Password"/>
+                        <small class="text-danger"></small>
+                        </div>
+                        <input class="btn btn-warning btn-block" onclick="update_password()" type="button" id="change_password_btn" value="Save Password"/>
+                    </form>
+                </div>
+            <div class="col-sm-12 col-md-2 col-lg-2 col-xl-2"></div>
+            </div>
+        </div>
+           
+    </div>
+
+<!-- JavaScript Bundle with Popper -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>
+<script type="application/javascript" src="../scripts/utility.js"></script>
+<script type="application/javascript">
+    // Prepare action buttons
+    let app_state = JSON.parse(localStorage.getItem('app_state'))
+
+    if (app_state.user === null){
+        window.location.replace('login.html')
+    }
+    const display_screen = document.querySelector('#display');
+    const editor = document.getElementById('editor');
+    const lang = document.querySelectorAll('.language')
+    const update_language =(language)=>{
+        $.ajax(
+            {url: `${base_url}/poems/translate/?from=english&to=${language}&word=Write Here`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`},
+            success: (result,status, request)=>{editor.placeholder = result;},
+            error: (request,status,error) =>{handle_form_error(request)},
+            type: "GET",
+            dataType: "json"
+            })
+    }
+    let paragraph_count = 0;
+    let paragraphs = document.querySelectorAll('.poem-line');
+    document.title = app_state.poem_title === null ? document.title : `Freeform Poem App || ${app_state.poem_title}`;
+    if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+        document.querySelector('#edit_btn').classList.remove('d-none')
+    }
+    $("#editor").on('keyup', function (e) {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+        if(app_state.poem_title === null){
+            start_save()
+        }else{
+            populate_editor(editor.value)
+            auto_save()
+        }
+
+    }
+    });
+    $("#edit_title").on('keyup', function (e) {
+    if (e.key === 'Enter' || e.keyCode === 13) {
+        save_title(document.getElementById('edit_title'))}
+    });
+
+    const create_paragraph = (text, id=null) => {
+        let paragraph;
+            if (id !== null) {
+                paragraph = document.getElementById(id)
+                paragraph = paragraph === null ? document.createElement('p') : paragraph
+            }else {
+                paragraph = document.createElement('p')
+            }
+            paragraph.className = "poem-line d-block"
+            paragraph.innerText = text
+            paragraph.id = id === null ? `para_${paragraph_count + 1}` : `${id}`
+            paragraph.addEventListener('dblclick', paragraph_onclick)
+            paragraph.addEventListener('click', select_paragraph)
+            if (id === null) {
+                paragraph_count++
+            }
+            return paragraph
+
+        }
+    const paragraph_onclick = e =>{
+                let paragraph = document.getElementById(e.target.id)
+                let para = document.createElement('textarea')
+                para.className = 'edit_para'
+                para.id = `edit_${paragraph.id}`
+                para.value = paragraph.innerText.split('\n')[0]
+                para.addEventListener('keyup', edit_paragraph)
+                para.addEventListener('blur', edit_paragraph)
+                display_screen.replaceChild(para, paragraph)
+                para.focus()
+            };
+    const edit_line = () =>{
+        let paragraph = document.querySelector('.selected')
+        let para = document.createElement('textarea')
+        para.className = 'edit_para'
+        para.id = `edit_${paragraph.id}`
+        para.value = paragraph.innerText.split('\n')[0]
+        para.addEventListener('keyup', edit_paragraph)
+        para.addEventListener('blur', edit_paragraph)
+        display_screen.replaceChild(para, paragraph)
+        para.focus()
+    };
+    const edit_paragraph = e => {
+                    let para = document.getElementById(e.target.id)
+                    let para_id = e.target.id.replaceAll('edit_', "")
+                    let paragraph = create_paragraph(para.value, para_id)
+                    app_state.highlighted_text = para.value
+                    app_state.select_start = para.selectionStart
+                    app_state.select_end = para.selectionEnd
+                    if ((e.key === 'Enter' || e.keyCode === 13) || (e.type === 'blur')){
+                        let para_value = para.value.split('\n')
+                        if (para_value[0] === "" || para_value === []){
+                            display_screen.removeChild(para)
+                            editor.focus()
+                        }else if(para_value[0] !== "") {
+                            paragraph.innerText = para_value[0];
+                            display_screen.replaceChild(paragraph, para);
+                            para.blur()
+                            editor.focus()
+                        }
+
+                    }
+                    auto_save()
+                };
+    const select_paragraph = e => {
+          let paragraph = document.getElementById(e.target.id)
+          unselect_other_paragraphs(paragraph.id)
+          toggle_highlight(paragraph)
+      };
+    const toggle_highlight = paragraph =>{
+          if (paragraph.classList.contains('bg-warning')){
+              paragraph.classList.remove('bg-warning')
+              paragraph.classList.remove('selected')
+          }else{
+              paragraph.classList.add('bg-warning')
+              paragraph.classList.add('selected')
+          }
+      };
+    const unselect_other_paragraphs = id => {
+          let paragraphs = document.querySelectorAll('.selected')
+          for (const paragraph_ of paragraphs){
+              if (paragraph_.id !== id){
+                  paragraph_.classList.remove('bg-warning')
+                  paragraph_.classList.remove('selected')
+              }
+          }
+      }
+    const set_language = btn =>{
+          app_state.language = btn.innerText.toLowerCase()
+          update_local_storage()
+          let lang = document.querySelectorAll('.language')
+          for(const l of lang){
+            l.classList.remove('bg-warning')
+            }
+          btn.classList.add('bg-warning')
+        update_language(app_state.language)
+      };
+
+    const set_language2 = (language) =>{
+          let lang = document.querySelectorAll('.language')
+          for(const l of lang) {
+              if (l.innerText.toLowerCase() === language.toLowerCase()) {
+                  l.classList.add('bg-warning')
+              } else {
+                  l.classList.remove('bg-warning')
+              }
+          }
+          app_state.language = language.toLowerCase();
+          update_local_storage();
+          update_language(app_state.language)
+      };
+
+    const populate_editor = value =>{
+        let paragraph = create_paragraph(value)
+            display_screen.appendChild(paragraph)
+            editor.value = ''
+    };
+
+    const tokenize = btn =>{
+          let paragraph = document.querySelector('.selected')
+          if (paragraph === null){
+              tokenize_all()
+              btn.innerText = "Untokenize"
+              btn.classList.add('all')
+              btn.onclick = () => {untokenize(btn)}
+          }else{
+              let line = paragraph.innerText
+              tokenize_api(line, app_state.language, paragraph, btn)
+          }
+      };
+
+    const tokenize_success = (result, paragraph, btn=null) =>{
+        create_tokenized(result, paragraph.id);
+        if (btn !== null){
+             btn.innerText = "Untokenize"
+            btn.onclick = () => {untokenize(btn)}
+        }
+
+    }
+
+    const tokenize_api = (line, language, paragraph, btn=null) =>{
+          $.ajax(
+            {url: `${base_url}/poems/lines/syllables/`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`},
+            success: (result,status, request)=>{tokenize_success(result, paragraph, btn)},
+            data: {"line": line, "language": language},
+            error: (request,status,error) =>{handle_form_error(request)},
+            type: "POST",
+            dataType: "json"
+            })
+
+      };
+
+    const color_generator = (number) =>{
+          let colors = []
+          let parent_hue = 366
+          let parent_sat = 50
+          let sat = 50
+          let light = 50
+          let hue = 366
+          while (colors.length < number && sat > 0 && light > 0){
+            colors.push([hue, light, sat])
+              hue = hue - 20
+            }
+              if (hue === 0){
+                  parent_hue = parent_hue - parent_sat
+                  hue = parent_hue
+                  sat = sat - 10
+                  light = light - 10
+          }
+          return colors
+        };
+
+    const create_tokenized = (data, paragraph_id) => {
+        let paragraph = document.getElementById(paragraph_id)
+        let colors = color_generator(data.length)
+        let main_div = document.createElement('div')
+        main_div.className = 'p-2 m-1 token'
+        main_div.id = paragraph_id.replace('para', "tokened")
+        main_div.data = paragraph.innerText
+        for (let i = 0; i<data.length; i++){
+            let span = document.createElement('span')
+            span.id = `${paragraph_id}_token_${i}`
+            span.style = `border:1px solid hsl(${colors[i][0]}, ${colors[i][1]}%, ${colors[i][2]}%); border-radius: 5px; margin-left: 2px`
+            span.innerText = data[i]
+            span.index = i
+            span.onclick = () => {highlight_syllable(span)}
+            span.className = "p-2 m-1 d-inline-block span-token"
+            main_div.appendChild(span)
+        }
+        display_screen.replaceChild(main_div, paragraph)
+    };
+
+    const highlight_syllable = (item) => {
+        let index = item.index
+        let spans  = document.querySelectorAll('.span-token')
+        for(const span of spans){
+            if(span.index === index){
+                if(span.classList.contains('bg-warning')){
+                    span.classList.remove('bg-warning')
+                }else{
+                    span.classList.add('bg-warning')
+                }
+            }else{
+                if(span.classList.contains('bg-warning')) {
+                    span.classList.remove('bg-warning')
+                }
+            }
+        }
+    };
+
+    const untokenize = btn => {
+        if (btn.classList.contains('all')){
+            untokenize_all()
+            btn.classList.remove('all')
+        }else{
+            let tokened = document.querySelector('.token')
+             let paragraph = create_paragraph(tokened.data, tokened.id.replace('tokened', 'para'))
+            display_screen.replaceChild(paragraph, tokened)
+        }
+        btn.innerText = 'Tokenize'
+        btn.onclick = () => { tokenize(btn)}
+
+    };
+
+    const tokenize_all = () => {
+        let paragraphs = document.querySelectorAll('.poem-line');
+        for (const paragraph of paragraphs){
+            tokenize_api(paragraph.innerText, app_state.language, paragraph, null)
+        }
+    };
+
+    const untokenize_all = () => {
+        let tokened = document.querySelectorAll('.token')
+        for (const item of tokened){
+             let paragraph = create_paragraph(item.data, item.id.replace('tokened', 'para'))
+             display_screen.replaceChild(paragraph, item)
+        }
+    };
+
+    const get_synonyms = btn => {
+        let word = retrieve_selected_word()
+        if(word === ""){
+            alert('No word was selected')
+        }
+        else {
+            let language = app_state.language.toLowerCase()
+            synonym_api(word, language)
+
+        }
+
+    };
+
+    const retrieve_selected_word = () => {
+        app_state.highlighted_word = ""
+        let word = window.getSelection().toString()
+        if (word === "") {
+            let editor = document.getElementById("editor");
+            let editor_text = app_state.highlighted_text === null ? editor.value : app_state.highlighted_text
+            let selectionStart = app_state.select_start == null ? editor.selectionStart : app_state.select_start;
+            let selectionEnd = app_state.select_end == null ? editor.selectionEnd : app_state.select_end;
+            app_state.highlighted_text = null
+            app_state.select_end = null
+            app_state.select_start = null
+            if (selectionStart !== selectionEnd) {
+                let editorCharArray = editor_text.split("")
+                word = editorCharArray.slice(selectionStart, (selectionEnd + 1)).join("")
+            }
+        }
+        if (word !== "" || word !== undefined) {
+            app_state.highlighted_word = word.split(' ')[0]
+            return app_state.highlighted_word
+        }
+        if (word === ""){
+            alert('No word was selected')
+        }
+    };
+
+    const get_rhymes = btn => {
+        let word = retrieve_selected_word()
+        if(word === ""){
+            alert('No word was selected')
+        }else{
+            let language = app_state.language
+            rhymes_api(word, language)
+        }
+
+    };
+
+    const get_syllable = btn => {
+        if(btn.innerText === 'Tokenize All'){
+            tokenize_all()
+            btn.innerText = 'UnTokenize All'
+        }else{
+            untokenize_all()
+            btn.innerText = 'Tokenize All'
+        }
+    };
+
+    const auto_save = () => {
+        if(app_state.poem_title !== null){
+            let paragraphs = document.querySelectorAll('.poem-line')
+            let lines = []
+            for (const paragraph of paragraphs){
+                lines.push(paragraph.innerText)
+            }
+            app_state.lines = lines
+            update_local_storage()
+            update_poem_api(app_state.poem_title, app_state.lines)
+        }
+
+    };
+
+    const save_title =(editor)=>{
+        update_poem_api(editor.value, app_state.lines)
+        editor.classList.add('d-none')
+        let display = document.getElementById('display_title')
+        display.classList.remove('d-none')
+        let btn = document.getElementById('edit_title_btn')
+        btn.classList.remove('d-none')
+    }
+
+    const edit_title = (btn) =>{
+        let display = document.getElementById('display_title')
+        display.classList.add('d-none')
+        let title = document.getElementById('edit_title');
+        title.classList.remove('d-none')
+        title.value = app_state.poem_title
+        btn.classList.add('d-none')
+    }
+
+
+
+
+
+
+    const save =(title) => {
+        if(app_state.poem_title === null){
+            create_poem_api(title)
+        }
+
+
+    };
+    const start_save = () => {
+            if(app_state.poem_title === null){
+                $('#save_modal').show()
+            }else{
+                document.getElementById('display_title').innerText = app_state.poem_title;
+                document.title = `Freeform Poem App || ${app_state.poem_title}`;
+                display_screen.innerHTML = ''
+                editor.value = ''
+                for (const line of app_state.lines){
+                    populate_editor(line)
+                }
+            }
+        };
+
+    const add_new = () =>{
+        display_screen.innerHTML = "";
+        editor.value = ""
+        app_state.poem_id = null
+        app_state.poem_title = null
+        app_state.lines = []
+        update_local_storage()
+        start_save()
+    }
+
+
+    const create_poem_api = (title) =>{
+        $.ajax(
+            {url: `${base_url}/user_poems/`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`, "Content-Type": "application/json"},
+            success: (result,status, request)=>{ update_poem(result)},
+            data: JSON.stringify({"lines": [], "title": title}),
+            error: (request,status,error) =>{handle_form_error(request)},
+            json : true,
+            type: "POST",
+            })
+    };
+    const update_poem = result => {
+        app_state.poem_title = result.data.title
+        app_state.poem_id = result.data.id
+        update_local_storage()
+        document.getElementById('display_title').innerText = app_state.poem_title;
+        document.title = `Freeform Poem App || ${app_state.poem_title}`;
+        $('#save_modal').hide()
+
+    }
+    const update_poem_api = (title=app_state.poem_title, lines=app_state.lines) => {
+        $.ajax(
+            {url: `${base_url}/user_poems/${app_state.poem_id}/`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`, "Content-Type": "application/json"},
+            success: (result,status, request)=>{update_poem(result)},
+            data: JSON.stringify({"lines": lines, "title": title}),
+            error: (request,status,error) =>{handle_form_error(request)},
+            type: "PATCH",
+            dataType: "json"
+            })
+    };
+
+    const synonym_success = (result, word) =>{
+        if (result.length === 0){
+            alert('No synonym for this word')
+            return
+        }
+        show_modal(result, word, "Synonym")
+    }
+
+    const synonym_api = (word, language) => {
+        $.ajax(
+            {url: `${base_url}/poems/words/synonym/`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`},
+            success: (result,status, request)=>{synonym_success(result, word)},
+            data: {"word": word, "language": language.toLowerCase()},
+            error: (request,status,error) =>{handle_form_error(request)},
+            type: "GET",
+            dataType: "json"
+            })
+    };
+
+    const ryhme_success = (result, word) =>{
+        if (result.length === 0){
+            alert('No ryhmes for this word')
+            return
+        }
+        show_modal(result, word, "Rhymes")
+    }
+
+
+    const rhymes_api = (word, language) => {
+        $.ajax(
+            {url: `${base_url}/poems/words/rhymes/`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`},
+            success: (result,status, request)=>{ryhme_success(result, word)},
+            data: {"word": word, "language": language.toLowerCase()},
+            error: (request,status,error) =>{handle_form_error(request)},
+            type: "GET",
+            dataType: "json"
+            })
+    };
+
+    const show_modal = (data, argument, action) =>{
+        let modal_action = document.querySelector("#modal_action")
+        let modal_arg = document.querySelector('#modal_arg')
+        let modal_body = document.querySelector('#modal_body')
+        modal_body.innerHTML = ''
+        modal_arg.innerText = argument
+        modal_action.innerText = action
+        for (const dt in data){
+            let span = document.createElement('span')
+             span.className = "bg-warning rounded m-1 p-1 d-inline-block"
+             span.innerText = data[dt]
+            modal_body.appendChild(span)
+        }
+        $('#display_modal').show()
+
+    };
+    const switch_page = (btn_id, page_id) => {
+        const btn = document.getElementById(btn_id)
+        const pages = document.querySelectorAll('.page')
+        for (const page of pages ){
+            if (page.id !== page_id){
+                page.classList.add('d-none')
+            }else{
+                page.classList.remove('d-none')
+            }
+        }
+        const nav_btns = document.querySelectorAll('.nav-btn')
+        for (const nav_btn of nav_btns) {
+            if (nav_btn !== btn) {
+                nav_btn.classList.remove('bg-warning')
+                nav_btn.querySelector('i').classList.add('text-warning')
+                nav_btn.querySelector('i').classList.remove('text-secondary')
+            } else {
+                nav_btn.classList.add('bg-warning')
+                nav_btn.querySelector('i')
+                nav_btn.querySelector('i').classList.remove('text-warning')
+                nav_btn.querySelector('i').classList.add('text-secondary')
+            }
+        }
+         const editor_actions = document.getElementById('editor_actions')
+        if ((page_id) === 'editor-page'){
+            editor_actions.classList.remove('d-none')
+            set_language2('english')
+            start_save();
+        }else{
+             editor_actions.classList.add('d-none')
+        }
+    };
+    const logout =()=>{
+        app_state = {
+        "user": {},
+        "language": "english",
+        "highlighted_word": window.getSelection().toString(),
+        "highlighted_text": null,
+        "select_start": null,
+        "select_end": null,
+        "lines": [],
+        "poem_title": null,
+        "alert": null,
+        "page": "login"
+        }
+        update_local_storage()
+        window.location.replace('login.html')
+
+    };
+
+    start_save()
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+<script type="application/javascript">
+    const profile_form = document.getElementById('update_profile')
+    const profile_inputs = profile_form.querySelectorAll('.form-attr')
+    const password_form = document.getElementById('change_password')
+    const password_inputs = password_form.querySelectorAll('.form-attr')
+    const populate_profile_page = ()=>{
+        for (const input of profile_inputs){
+            input.value = app_state.user[input.name]
+        }
+    }
+    populate_profile_page()
+    const update_profile = () =>{
+        const form_data = get_form_data(profile_inputs)
+        $.ajax(
+            {url: `${base_url}/accounts/user/`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`},
+            success: (result,status, request)=>{profile_update_success(result)},
+            data: form_data,
+            error: (request,status,error) =>{handle_form_error(request)},
+            type: "PATCH",
+            dataType: "json"
+            })
+        }
+    const profile_update_success = (result) =>{
+        $.extend(app_state.user, result.data)
+        update_local_storage()
+    }
+
+    const update_password = () =>{
+        const form_data = get_form_data(password_inputs)
+        $.ajax(
+            {url: `${base_url}/accounts/user/password/change/`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`},
+            success: (result,status, request)=>{logout()},
+            data: form_data,
+            error: (request,status,error) =>{handle_form_error(request)},
+            type: "PATCH",
+            dataType: "json"
+            })
+    }
+</script>
+<script type="application/javascript">
+    const poem_bucket = document.getElementById('poem-list-bucket')
+    const delete_poem =(poem_id)=>{
+        const poem_item = document.getElementById(`poem_item_${poem_id}`);
+        poem_bucket.removeChild(poem_item);
+         $.ajax({url: `${base_url}/user_poems/${poem_id}`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`},
+            error: (request,status,error) =>{handle_form_error(request)},
+            type: "DELETE",
+            dataType: "json"
+            });
+    }
+    const download_poem =  (poem_id) =>{
+         $.ajax({url: `${base_url}/user_poems/${poem_id}/export/`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`},
+            success: (result, status, request)=>{window.open(result.export_url, '_blank')},
+            error: (request,status,error) =>{handle_form_error(request)},
+            type: "GET",
+            dataType: "json"
+            });
+    }
+
+    const render_poem = (poem) => {
+        const poem_component = document.createElement('div');
+        poem_component.className = "col-sm-12 mb-3";
+        poem_component.id = `poem_item_${poem.id}`;
+        poem_component.data = poem;
+        poem_component.innerHTML = `<div class="d-flex bg-secondary poem_list_action">
+                <div class="mr-auto p-2 poem_list bg-warning border border-secondary border-3">
+                    <a href="javascript:open_poem(${poem.id});switch_page('editor_nav', 'editor-page');"
+                       class="text-decoration-none text-black poem-item text-small">${poem.title}</a>
+                </div>
+                <div class="p-2">
+                    <button class="btn btn-sm btn-outline-warning d-none d-sm-block" onclick="delete_poem(${poem.id})">Delete <i
+                        class="fa fa-trash d-none d-xl-inline"></i></button>
+                    <button class="btn btn-sm btn-outline-warning d-block d-sm-none" title="delete"><i
+                        class="fa fa-trash" onclick="delete_poem(${poem.id})"></i></button>
+                </div>
+                <div class="p-2">
+                    <button class="btn btn-sm btn-outline-warning d-none d-sm-block" onclick="download_poem(${poem.id})">Download <i
+                        class="fa fa-download d-none d-xl-inline"></i></button>
+                    <button class="btn btn-sm btn-outline-warning d-block d-sm-none" title="download"><i
+                        class="fa fa-download" onclick="download_poem(${poem.id})"></i></button>
+                </div>
+            </div>`;
+        poem_bucket.appendChild(poem_component);
+    }
+
+    const open_poem = (poem_id) =>{
+        const poem_item = document.getElementById(`poem_item_${poem_id}`);
+        app_state.lines = poem_item.data.lines
+        app_state.poem_title = poem_item.data.title
+        app_state.poem_id = poem_item.data.id
+        update_local_storage()
+
+    }
+
+
+
+    const render_poems =(result)=>{
+        poem_bucket.innerHTML = null;
+        for(const poem of result){
+            render_poem(poem)
+        }
+    }
+
+    const get_poems = () =>{
+        $.ajax(
+            {url: `${base_url}/user_poems/`,
+            cache: false,
+            headers: {"Authorization": `Bearer ${app_state.user.token.access}`},
+            success: (result,status, request)=>{render_poems(result)},
+            error: (request,status,error) =>{handle_form_error(request)},
+            type: "GET",
+            dataType: "json"
+            })
+    }
+</script>
+</body>
+</html>
